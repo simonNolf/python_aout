@@ -8,8 +8,16 @@ LARGEUR, LONGUEUR = 700, 800
 win = pygame.display.set_mode((LARGEUR, LONGUEUR))
 pygame.display.set_caption("démineur")
 couleur_fond = "white"
-ROWS, COLS = 30, 30
+ROWS, COLS = 15,15
 MINES = 30
+
+TAILLE = LARGEUR / ROWS
+
+NUM_FONT = pygame.font.SysFont("comicsans", 20)
+NUM_COLORS = {1: "blue", 2: "green", 3: "red", 4: "purple", 5: "yellow", 6: "grey", 7: "brown", 8: "black"}
+
+RECT_COLOR = "white"
+RECT_CLIC_COLOR = (140, 140, 140)
 
 
 def get_voisins(row, col, rows, cols):
@@ -58,21 +66,55 @@ def creationChampsMine(rows, cols, MINES):
     return champ
 
 
-def draw(win):
+def draw(win, champ, champ_couvert):
     win.fill(couleur_fond)
+
+    for i, row in enumerate(champ):
+        y = TAILLE * i
+        for j, value in enumerate(row):
+            x = TAILLE * j
+
+            couvert = champ_couvert[i][j] == 0
+
+            if couvert:
+                pygame.draw.rect(win, RECT_COLOR, (x, y, TAILLE, TAILLE))
+                pygame.draw.rect(win, "black", (x, y, TAILLE, TAILLE),2)
+                continue
+            else:
+                pygame.draw.rect(win, RECT_CLIC_COLOR, (x, y, TAILLE, TAILLE))
+                pygame.draw.rect(win, "black", (x, y, TAILLE, TAILLE),2)
+
+            if value > 0:
+                text = NUM_FONT.render(str(value), 1, NUM_COLORS[value])
+                win.blit(text, (x + (TAILLE / 2 - text.get_width() / 2), y + (TAILLE / 2 - text.get_height() / 2)))
     pygame.display.update()
+
+
+def pos_grille(pos_souris):
+    mx, my = pos_souris
+    row = int(my // TAILLE)
+    col = int(mx // TAILLE)
+
+    return row, col
 
 
 def main():
     run = True
     champ = creationChampsMine(ROWS, COLS, MINES)
+    champ_couvert = [[0 for _ in range(COLS)] for _ in range(ROWS)]
     print(champ)
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 break
-        draw(win)
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                row, col = pos_grille(pygame.mouse.get_pos())
+                if row >= ROWS or col >= COLS:
+                    continue
+                champ_couvert[row][col] = 1
+        draw(win, champ, champ_couvert)
 
     pygame.quit()
 
